@@ -290,15 +290,10 @@ body { background: var(--bg); color: var(--t1); font-family: var(--font); min-he
     </div>
     <div class="modal-sep"></div>
     <div style="font-size:0.68rem;color:var(--t2);margin-bottom:10px">Already tracking on another device?</div>
-    <label for="restore-pat">GitHub token (gist scope)</label>
-    <div class="finput-wrap">
-      <input type="password" id="restore-pat" class="finput" placeholder="ghp_…">
-      <button class="show-toggle" onclick="toggleVis('restore-pat',this)">show</button>
-    </div>
-    <label for="restore-gid" style="margin-top:10px">Gist ID</label>
-    <input type="text" id="restore-gid" class="finput" placeholder="abc123…">
+    <label for="restore-bid">Bin ID</label>
+    <input type="text" id="restore-bid" class="finput" placeholder="paste your bin ID…">
     <div class="btn-row">
-      <button class="btn-ghost" onclick="restoreFromGist()">Restore from sync</button>
+      <button class="btn-ghost" onclick="restoreFromBin()">Restore</button>
     </div>
     <div id="restore-err" style="font-size:0.68rem;color:var(--red);margin-top:8px;display:none"></div>
   </div>
@@ -315,36 +310,17 @@ body { background: var(--bg); color: var(--t1); font-family: var(--font); min-he
     </div>
 
     <div class="sync-section">
-      <label>GitHub Personal Access Token</label>
-      <div class="finput-wrap">
-        <input type="password" id="sm-pat" class="finput" placeholder="ghp_…">
-        <button class="show-toggle" onclick="toggleVis('sm-pat',this)">show</button>
-      </div>
-      <div class="hint">Classic token · gist scope only · <a href="https://github.com/settings/tokens/new?scopes=gist&description=32wks-tracker" target="_blank">create one ↗</a></div>
-
-      <label style="margin-top:14px">Gist ID <span style="color:var(--t3);font-weight:400">(auto-created)</span></label>
+      <label>Bin ID <span style="color:var(--t3);font-weight:400">(auto-created)</span></label>
       <div class="gist-id-row">
-        <input type="text" id="sm-gid" class="finput" placeholder="will appear after connecting" readonly>
-        <button class="copy-btn" onclick="copyGistId()" id="copy-gid-btn">copy</button>
+        <input type="text" id="sm-bid" class="finput" placeholder="—" readonly>
       </div>
-      <div class="hint">Share this ID (+ your token) to link on another device.</div>
 
-      <div class="btn-row">
-        <button class="btn" onclick="connectSync()" id="sm-connect-btn">Connect</button>
+      <div class="btn-row" style="margin-top:14px">
+        <button class="btn" onclick="copyShareLink()" id="copy-link-btn">copy link</button>
         <button class="btn-ghost" onclick="manualPull()" id="sm-pull-btn">Pull now</button>
       </div>
+      <div class="hint" style="margin-top:8px">Open the copied link on any device — no token needed.</div>
       <div id="sm-err" style="font-size:0.68rem;color:var(--red);margin-top:8px;display:none"></div>
-    </div>
-
-    <div class="modal-sep"></div>
-
-    <div style="font-size:0.7rem;font-weight:700;color:var(--t2);margin-bottom:10px;text-transform:uppercase;letter-spacing:.07em">Access from any device</div>
-    <div class="host-box">
-      <p>Serve this file locally on your network:</p>
-      <code>cd ~/ME && python3 -m http.server 8080</code>
-      <p style="margin-top:8px">Then open from phone / tablet:</p>
-      <code id="local-url">http://&lt;your-ip&gt;:8080/dashboard.html</code>
-      <p style="margin-top:8px">Or deploy free on <strong style="color:var(--t1)">Netlify Drop</strong> — drag &amp; drop this file at netlify.com/drop</p>
     </div>
 
     <div class="modal-sep"></div>
@@ -748,7 +724,7 @@ let S = {
   tasks: {},
   streak: { lastDate: null, count: 0 },
   activePhase: 1,
-  sync: { pat: null, gistId: null, lastSynced: null }
+  sync: { binId: null, lastSynced: null }
 };
 
 function load() {
@@ -759,7 +735,7 @@ function load() {
       S = Object.assign({}, S, p);
       S.tasks  = p.tasks  || {};
       S.streak = p.streak || { lastDate: null, count: 0 };
-      S.sync   = p.sync   || { pat: null, gistId: null, lastSynced: null };
+      S.sync   = p.sync   || { binId: null, lastSynced: null };
     }
   } catch(e) {}
 }
@@ -824,12 +800,12 @@ function toggle(id) {
   persist(); render();
   // debounced push (1.2s)
   clearTimeout(_pushTimer);
-  _pushTimer = setTimeout(() => pushToGist(), 1200);
+  _pushTimer = setTimeout(() => pushToBin(), 1200);
 }
 
-// ─── SYNC — GITHUB GIST ────────────────────────────────────────────────────
-const GIST_FILE = 'roadmap-progress.json';
-const GIST_API  = 'https://api.github.com/gists';
+// ─── SYNC — JSONBIN ────────────────────────────────────────────────────────
+const JSONBIN_KEY = '$2a$10$cgjoZypkOUvgXHmUlRxjiuhzx1ZSyf5jMp96/GCd3sf37cKphwLtS';
+const JSONBIN_URL = 'https://api.jsonbin.io/v3/b';
 
 function setSyncState(status, label) {
   ['h-sync-dot','sm-dot'].forEach(id=>{
@@ -840,22 +816,18 @@ function setSyncState(status, label) {
   if(sl) sl.textContent=label;
 }
 
-function gistPayload() {
-  return {
-    startDate: S.startDate,
-    tasks: S.tasks,
-    streak: S.streak
-  };
+function syncPayload() {
+  return { startDate: S.startDate, tasks: S.tasks, streak: S.streak };
 }
 
-async function pushToGist() {
-  if (!S.sync.pat || !S.sync.gistId) return;
+async function pushToBin() {
+  if (!S.sync.binId) return;
   setSyncState('syncing','syncing…');
   try {
-    const r = await fetch(`${GIST_API}/${S.sync.gistId}`, {
-      method: 'PATCH',
-      headers: { 'Authorization': `token ${S.sync.pat}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ files: { [GIST_FILE]: { content: JSON.stringify(gistPayload(), null, 2) } } })
+    const r = await fetch(`${JSONBIN_URL}/${S.sync.binId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-Master-Key': JSONBIN_KEY },
+      body: JSON.stringify(syncPayload())
     });
     if (!r.ok) throw new Error(`${r.status}`);
     S.sync.lastSynced = new Date().toISOString();
@@ -866,24 +838,21 @@ async function pushToGist() {
   }
 }
 
-async function pullFromGist(pat, gistId) {
-  const _pat = pat || S.sync.pat;
-  const _gid = gistId || S.sync.gistId;
-  if (!_pat || !_gid) return false;
+async function pullFromBin(binId) {
+  const _bid = binId || S.sync.binId;
+  if (!_bid) return false;
   setSyncState('syncing','pulling…');
   try {
-    const r = await fetch(`${GIST_API}/${_gid}`, {
-      headers: { 'Authorization': `token ${_pat}` }
+    const r = await fetch(`${JSONBIN_URL}/${_bid}/latest`, {
+      headers: { 'X-Master-Key': JSONBIN_KEY }
     });
     if (!r.ok) throw new Error(`${r.status}`);
     const data = await r.json();
-    const raw = data.files[GIST_FILE]?.content;
-    if (!raw) throw new Error('file not found in gist');
-    const remote = JSON.parse(raw);
+    const remote = data.record;
     if (remote.tasks) S.tasks = remote.tasks;
     if (remote.startDate) S.startDate = remote.startDate;
     if (remote.streak) S.streak = remote.streak;
-    S.sync = { ...(S.sync||{}), pat: _pat, gistId: _gid, lastSynced: new Date().toISOString() };
+    S.sync = { binId: _bid, lastSynced: new Date().toISOString() };
     persist(); render();
     setSyncState('synced', 'synced ' + fmtAgo(S.sync.lastSynced));
     return true;
@@ -893,19 +862,15 @@ async function pullFromGist(pat, gistId) {
   }
 }
 
-async function createGist(pat) {
-  const r = await fetch(GIST_API, {
+async function createBin() {
+  const r = await fetch(JSONBIN_URL, {
     method: 'POST',
-    headers: { 'Authorization': `token ${pat}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      description: '32 Weeks — AI Engineering Roadmap',
-      public: false,
-      files: { [GIST_FILE]: { content: JSON.stringify(gistPayload(), null, 2) } }
-    })
+    headers: { 'Content-Type': 'application/json', 'X-Master-Key': JSONBIN_KEY, 'X-Bin-Name': '32wks-tracker' },
+    body: JSON.stringify(syncPayload())
   });
   if (!r.ok) throw new Error(`${r.status}`);
   const d = await r.json();
-  return d.id;
+  return d.metadata.id;
 }
 
 function fmtAgo(iso) {
@@ -917,98 +882,63 @@ function fmtAgo(iso) {
   return Math.floor(s/86400) + 'd ago';
 }
 
+function shareableLink() {
+  return location.origin + location.pathname + (S.sync.binId ? '#bin=' + S.sync.binId : '');
+}
+
 // ─── SYNC MODAL ────────────────────────────────────────────────────────────
 function openSync() {
   const el = document.getElementById('ov-sync');
   el.classList.remove('hidden');
-  // populate fields
-  document.getElementById('sm-pat').value = S.sync.pat || '';
-  document.getElementById('sm-gid').value = S.sync.gistId || '';
-  // status
   const dotEl = document.getElementById('sm-dot');
   const stEl  = document.getElementById('sm-status-text');
-  if (!S.sync.pat) {
-    dotEl.className='sync-dot idle'; stEl.textContent='Not configured';
+  const bidEl = document.getElementById('sm-bid');
+  if (bidEl) bidEl.value = S.sync.binId || '—';
+  if (!S.sync.binId) {
+    dotEl.className='sync-dot idle'; stEl.textContent='Setting up…';
   } else if (S.sync.lastSynced) {
     dotEl.className='sync-dot synced'; stEl.textContent='Last synced: '+fmtAgo(S.sync.lastSynced);
   } else {
-    dotEl.className='sync-dot idle'; stEl.textContent='Token set, not yet synced';
+    dotEl.className='sync-dot idle'; stEl.textContent='Not yet synced';
   }
 }
 function closeSync() { document.getElementById('ov-sync').classList.add('hidden'); }
 
-async function connectSync() {
-  const pat = document.getElementById('sm-pat').value.trim();
-  const gidVal = document.getElementById('sm-gid').value.trim();
-  const errEl = document.getElementById('sm-err');
-  const btn = document.getElementById('sm-connect-btn');
-  errEl.style.display='none';
-  if (!pat) { errEl.textContent='Enter a GitHub token.'; errEl.style.display='block'; return; }
-  btn.disabled=true; btn.textContent='Connecting…';
-  try {
-    let resolvedGid = gidVal;
-    if (!resolvedGid) {
-      // create new gist
-      resolvedGid = await createGist(pat);
-    }
-    S.sync = { pat, gistId: resolvedGid, lastSynced: null };
-    persist();
-    document.getElementById('sm-gid').value = resolvedGid;
-    // push current state
-    await pushToGist();
-    document.getElementById('sm-status-text').textContent = 'Connected · synced just now';
-    document.getElementById('sm-dot').className='sync-dot synced';
-  } catch(e) {
-    errEl.textContent = 'Error: ' + e.message + '. Check your token and try again.';
-    errEl.style.display='block';
-    setSyncState('error','error');
-  }
-  btn.disabled=false; btn.textContent='Connect';
-}
-
 async function manualPull() {
-  const pat = document.getElementById('sm-pat').value.trim();
-  const gidVal = document.getElementById('sm-gid').value.trim();
+  const btn = document.getElementById('sm-pull-btn');
   const errEl = document.getElementById('sm-err');
   errEl.style.display='none';
-  const btn = document.getElementById('sm-pull-btn');
   btn.disabled=true; btn.textContent='Pulling…';
-  const ok = await pullFromGist(pat||null, gidVal||null);
-  if (!ok) {
-    errEl.textContent='Pull failed. Check token and Gist ID.';
-    errEl.style.display='block';
-  } else {
-    document.getElementById('sm-pat').value = S.sync.pat||'';
-    document.getElementById('sm-gid').value = S.sync.gistId||'';
+  const ok = await pullFromBin();
+  if (!ok) { errEl.textContent='Pull failed.'; errEl.style.display='block'; }
+  else {
     document.getElementById('sm-status-text').textContent='Pulled · '+fmtAgo(S.sync.lastSynced);
     document.getElementById('sm-dot').className='sync-dot synced';
   }
   btn.disabled=false; btn.textContent='Pull now';
 }
 
-function copyGistId() {
-  const gidVal = document.getElementById('sm-gid').value;
-  if (!gidVal) return;
-  navigator.clipboard?.writeText(gidVal);
-  const btn = document.getElementById('copy-gid-btn');
-  btn.textContent='copied!'; setTimeout(()=>btn.textContent='copy', 1500);
+function copyShareLink() {
+  const link = shareableLink();
+  navigator.clipboard?.writeText(link);
+  const btn = document.getElementById('copy-link-btn');
+  btn.textContent='copied!'; setTimeout(()=>btn.textContent='copy link', 1500);
 }
 
-// ─── RESTORE FROM GIST (start modal) ──────────────────────────────────────
-async function restoreFromGist() {
-  const pat = document.getElementById('restore-pat').value.trim();
-  const gidVal = document.getElementById('restore-gid').value.trim();
+// ─── RESTORE FROM BIN (start modal) ───────────────────────────────────────
+async function restoreFromBin() {
+  const bidVal = document.getElementById('restore-bid').value.trim();
   const errEl = document.getElementById('restore-err');
   errEl.style.display='none';
-  if (!pat||!gidVal) { errEl.textContent='Enter both token and Gist ID.'; errEl.style.display='block'; return; }
-  const ok = await pullFromGist(pat, gidVal);
+  if (!bidVal) { errEl.textContent='Enter a Bin ID.'; errEl.style.display='block'; return; }
+  const ok = await pullFromBin(bidVal);
   if (ok) {
     document.getElementById('ov-start').classList.add('hidden');
     document.getElementById('app').style.display='block';
     if (!S.activePhase) S.activePhase = phaseOf(getCW());
     render();
   } else {
-    errEl.textContent='Could not pull from gist. Check token and ID.';
+    errEl.textContent='Could not restore. Check the Bin ID.';
     errEl.style.display='block';
   }
 }
@@ -1027,8 +957,9 @@ function saveStart() {
   document.getElementById('app').style.display='block';
   S.activePhase = phaseOf(getCW());
   render();
-  // push to gist if configured
-  if (S.sync.pat && S.sync.gistId) pushToGist();
+  // push to bin (auto-create if first time)
+  if (S.sync.binId) { pushToBin(); }
+  else { createBin().then(id => { S.sync.binId = id; persist(); pushToBin(); }).catch(()=>{}); }
 }
 
 // ─── RENDER ────────────────────────────────────────────────────────────────
@@ -1048,7 +979,7 @@ function render() {
     `P${cp} · ${ROADMAP.find(p=>p.phase===cp).name}`;
 
   // sync dot in header
-  if (!S.sync.pat) {
+  if (!S.sync.binId) {
     setSyncState('idle','not synced');
   } else if (S.sync.lastSynced) {
     setSyncState('synced', fmtAgo(S.sync.lastSynced));
@@ -1123,16 +1054,30 @@ function render() {
 // ─── INIT ──────────────────────────────────────────────────────────────────
 load();
 
+// pick up bin ID from shareable link (#bin=XXX)
+const _hashBin = (location.hash.match(/[#&]bin=([^&]+)/) || [])[1];
+if (_hashBin && !S.sync.binId) { S.sync.binId = _hashBin; persist(); }
+
 if (!S.startDate) {
   document.getElementById('sd-input').value = new Date().toISOString().slice(0,10);
   document.getElementById('ov-start').classList.remove('hidden');
+  // if bin ID known (from link), pull state silently
+  if (S.sync.binId) pullFromBin().then(ok => {
+    if (ok) {
+      document.getElementById('ov-start').classList.add('hidden');
+      document.getElementById('app').style.display='block';
+      if (!S.activePhase) S.activePhase = phaseOf(getCW());
+      render();
+    }
+  });
 } else {
   document.getElementById('ov-start').classList.add('hidden');
   document.getElementById('app').style.display='block';
   if (!S.activePhase) S.activePhase = phaseOf(getCW());
   render();
-  // pull latest state from gist on load
-  if (S.sync.pat && S.sync.gistId) pullFromGist();
+  // pull on load, or auto-create bin if first time
+  if (S.sync.binId) { pullFromBin(); }
+  else { createBin().then(id => { S.sync.binId = id; persist(); }).catch(()=>{}); }
 }
 </script>
 </body>
