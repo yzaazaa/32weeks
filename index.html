@@ -31,7 +31,7 @@
   --r: 4px;
 }
 
-html { font-size: 13px; scroll-behavior: smooth; }
+html { font-size: 15px; scroll-behavior: smooth; }
 body { background: var(--bg); color: var(--t1); font-family: var(--font); min-height: 100vh; line-height: 1.5; }
 
 /* ── MODALS ───────────────────────────────────────────────────────── */
@@ -206,7 +206,7 @@ body { background: var(--bg); color: var(--t1); font-family: var(--font); min-he
 .month-hd:first-child { margin-top: 0; }
 .month-hd::after { content:''; flex:1; height:1px; background:var(--b1); }
 
-.week-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(268px, 1fr)); gap: 8px; margin-bottom: 8px; }
+.week-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; margin-bottom: 10px; }
 
 /* ── WEEK CARD ────────────────────────────────────────────────────── */
 .wcard { background: var(--s1); border: 1px solid var(--b1); border-radius: 6px; padding: 14px; transition: border-color .2s; }
@@ -268,6 +268,18 @@ body { background: var(--bg); color: var(--t1); font-family: var(--font); min-he
 #footer { border-top: 1px solid var(--b1); padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; font-size: 0.63rem; color: var(--t3); }
 .reset-btn { background: none; border: none; color: var(--t3); font-family: var(--font); font-size: 0.63rem; cursor: pointer; text-decoration: underline; padding: 0; }
 .reset-btn:hover { color: var(--red); }
+
+/* ── DAY ROW ──────────────────────────────────────────────────────── */
+.day-row { display: flex; gap: 4px; margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--b1); }
+.daybubble { flex: 1; padding: 6px 2px 5px; border: 1px solid var(--b2); border-radius: 3px; background: none; cursor: pointer; font-family: var(--font); text-align: center; transition: all .12s; user-select: none; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.daybubble:hover { border-color: var(--b3); }
+.daybubble.done { background: var(--accent-bg); border-color: var(--accent-border); }
+.daybubble.is-today { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.daybubble .dlabel { font-size: 0.58rem; text-transform: uppercase; letter-spacing: .04em; color: var(--t3); line-height: 1; }
+.daybubble.done .dlabel { color: var(--accent); }
+.daybubble.is-today .dlabel { color: var(--accent); }
+.daybubble .dcheck { width: 6px; height: 6px; border-radius: 50%; background: var(--b3); transition: background .12s; }
+.daybubble.done .dcheck { background: var(--accent); }
 
 @media (max-width: 580px) {
   .hstat, .hdiv, .overall-bar { display: none; }
@@ -997,6 +1009,8 @@ function render() {
 
   // content
   const phase = ROADMAP.find(p=>p.phase===S.activePhase);
+  const DAY_LABELS = ['M','T','W','T','F','S'];
+  const dayInJourney = S.startDate ? Math.floor((Date.now()-new Date(S.startDate))/86400000) : -1;
   let html='';
   phase.months.forEach(m=>{
     html+=`<div class="month-hd">${esc(m.name)}</div><div class="week-grid">`;
@@ -1019,6 +1033,16 @@ function render() {
           <div class="tbox">${done?'✓':''}</div>
           <span class="ttxt">${esc(task)}</span></div>`;
       });
+      // day tracker row (Mon–Sat)
+      html+=`<div class="day-row">`;
+      for(let di=0;di<6;di++){
+        const did=`w${w.id}-day${di+1}`;
+        const ddone=!!S.tasks[did];
+        const absDay=(w.id-1)*7+di;
+        const isToday=absDay===dayInJourney;
+        html+=`<div class="daybubble${ddone?' done':''}${isToday?' is-today':''}" onclick="toggle('${did}')"><span class="dlabel">${DAY_LABELS[di]}</span><span class="dcheck"></span></div>`;
+      }
+      html+=`</div>`;
       html+=`</div></div>`;
     });
     html+=`</div>`;
