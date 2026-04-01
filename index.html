@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>32 Weeks</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #080808;
+  --s1: #0d0d0d;
+  --s2: #121212;
+  --b1: #1a1a1a;
+  --b2: #222;
+  --b3: #2e2e2e;
+  --t1: #d0d0d0;
+  --t2: #5a5a5a;
+  --t3: #2e2e2e;
+  --accent: #a3e635;
+  --accent-bg: rgba(163,230,53,.07);
+  --accent-border: rgba(163,230,53,.2);
+  --red: #f87171;
+  --red-bg: rgba(248,113,113,.07);
+  --red-border: rgba(248,113,113,.18);
+  --green: #4ade80;
+  --green-bg: rgba(74,222,128,.07);
+  --green-border: rgba(74,222,128,.2);
+  --yellow: #fbbf24;
+  --font: 'JetBrains Mono','Fira Code','Cascadia Code','SF Mono','Menlo','Consolas',monospace;
+  --r: 4px;
+}
+
+html { font-size: 13px; scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--t1); font-family: var(--font); min-height: 100vh; line-height: 1.5; }
+
+/* ── MODALS ───────────────────────────────────────────────────────── */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.88);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 300;
+  backdrop-filter: blur(6px);
+}
+.overlay.hidden { display: none; }
+
+.modal {
+  background: var(--s1);
+  border: 1px solid var(--b2);
+  border-radius: 8px;
+  padding: 32px;
+  width: 400px;
+  max-width: 94vw;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.modal-logo { font-size: 1.5rem; font-weight: 800; color: var(--accent); letter-spacing: -.02em; margin-bottom: 6px; }
+.modal-logo span { color: var(--t2); font-weight: 400; }
+.modal-sub { font-size: 0.75rem; color: var(--t2); margin-bottom: 26px; line-height: 1.65; }
+.modal h3 { font-size: 0.8rem; font-weight: 700; color: var(--t1); margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--b1); }
+.modal label { display: block; font-size: 0.65rem; color: var(--t2); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 6px; margin-top: 14px; }
+.modal label:first-of-type { margin-top: 0; }
+
+.finput {
+  width: 100%;
+  background: var(--s2);
+  border: 1px solid var(--b2);
+  border-radius: var(--r);
+  color: var(--t1);
+  font-family: var(--font);
+  font-size: 0.82rem;
+  padding: 8px 11px;
+  outline: none;
+  transition: border-color .15s;
+  color-scheme: dark;
+}
+.finput:focus { border-color: var(--accent); }
+.finput[type="password"] { letter-spacing: .08em; }
+
+.finput-wrap { position: relative; }
+.finput-wrap .finput { padding-right: 36px; }
+.show-toggle {
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; color: var(--t2); cursor: pointer;
+  font-family: var(--font); font-size: 0.65rem; padding: 0;
+  text-transform: uppercase; letter-spacing: .06em;
+}
+.show-toggle:hover { color: var(--t1); }
+
+.hint { font-size: 0.65rem; color: var(--t3); margin-top: 5px; line-height: 1.5; }
+.hint a { color: var(--t2); }
+
+.btn {
+  background: var(--accent); color: #080808;
+  border: none; border-radius: var(--r);
+  padding: 9px 18px;
+  font-family: var(--font); font-size: 0.75rem; font-weight: 800;
+  cursor: pointer; letter-spacing: .06em; text-transform: uppercase;
+  transition: opacity .15s;
+}
+.btn:hover { opacity: .82; }
+.btn:disabled { opacity: .35; cursor: default; }
+.btn-ghost {
+  background: none; color: var(--t2);
+  border: 1px solid var(--b2);
+  border-radius: var(--r);
+  padding: 8px 16px;
+  font-family: var(--font); font-size: 0.75rem; font-weight: 600;
+  cursor: pointer; letter-spacing: .05em; text-transform: uppercase;
+  transition: border-color .15s, color .15s;
+}
+.btn-ghost:hover { border-color: var(--b3); color: var(--t1); }
+.btn-row { display: flex; gap: 8px; margin-top: 20px; }
+.btn-row .btn { flex: 1; }
+.btn-row .btn-ghost { flex: 1; }
+
+.modal-sep { height: 1px; background: var(--b1); margin: 20px 0; }
+
+/* ── HEADER ───────────────────────────────────────────────────────── */
+#header {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(8,8,8,.96);
+  border-bottom: 1px solid var(--b1);
+  backdrop-filter: blur(10px);
+  padding: 0 20px;
+}
+.header-inner {
+  display: flex; align-items: center; gap: 14px;
+  height: 50px; max-width: 1300px; margin: 0 auto;
+}
+.logo { font-size: 1rem; font-weight: 800; color: var(--accent); letter-spacing: -.01em; flex-shrink: 0; }
+.logo span { color: var(--t3); font-weight: 400; }
+
+.hstat { display: flex; align-items: center; gap: 5px; font-size: 0.7rem; color: var(--t2); white-space: nowrap; }
+.hstat .v { color: var(--t1); font-weight: 700; }
+.hdiv { width: 1px; height: 14px; background: var(--b2); flex-shrink: 0; }
+.hstretch { flex: 1; }
+
+.overall-bar { width: 120px; height: 2px; background: var(--b2); border-radius: 2px; overflow: hidden; flex-shrink: 0; }
+.overall-bar-fill { height: 100%; background: var(--accent); transition: width .4s ease; }
+
+.streak-num { color: var(--accent); font-weight: 800; }
+
+/* sync status */
+.sync-dot {
+  width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+  transition: background .3s;
+}
+.sync-dot.idle    { background: var(--b3); }
+.sync-dot.syncing { background: var(--yellow); animation: pulse 1s ease-in-out infinite; }
+.sync-dot.synced  { background: var(--green); }
+.sync-dot.error   { background: var(--red); }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+.sync-label { font-size: 0.65rem; color: var(--t2); white-space: nowrap; }
+
+.phase-pill {
+  padding: 3px 8px;
+  background: var(--accent-bg); border: 1px solid var(--accent-border);
+  border-radius: 3px; font-size: 0.62rem; color: var(--accent);
+  font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+  white-space: nowrap; flex-shrink: 0;
+}
+.wk-pill { font-size: 0.65rem; color: var(--t2); white-space: nowrap; flex-shrink: 0; }
+.wk-pill strong { color: var(--t1); }
+
+.icon-btn {
+  background: none; border: none; color: var(--t2);
+  cursor: pointer; font-size: 0.8rem; padding: 4px 6px;
+  border-radius: 3px; transition: color .15s, background .15s;
+  flex-shrink: 0; line-height: 1;
+}
+.icon-btn:hover { color: var(--t1); background: var(--s2); }
+
+/* ── TABS ─────────────────────────────────────────────────────────── */
+#tabs {
+  background: rgba(8,8,8,.96); border-bottom: 1px solid var(--b1);
+  padding: 0 20px; position: sticky; top: 50px; z-index: 99;
+  backdrop-filter: blur(10px);
+}
+.tabs-inner { display: flex; max-width: 1300px; margin: 0 auto; }
+.tab {
+  padding: 10px 16px; font-family: var(--font); font-size: 0.68rem;
+  font-weight: 700; color: var(--t3); cursor: pointer; border: none;
+  background: none; border-bottom: 2px solid transparent;
+  text-transform: uppercase; letter-spacing: .07em;
+  transition: color .12s; white-space: nowrap;
+  display: flex; align-items: center; gap: 7px; margin-bottom: -1px;
+}
+.tab:hover { color: var(--t2); }
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.tab-ct { padding: 1px 5px; background: var(--s2); border-radius: 2px; font-size: 0.58rem; color: var(--t2); font-weight: 600; }
+.tab.active .tab-ct { background: var(--accent-bg); color: var(--accent); }
+
+/* ── AI RULE STRIP ────────────────────────────────────────────────── */
+.ai-strip { padding: 5px 20px; font-size: 0.65rem; color: var(--t3); border-bottom: 1px solid var(--b1); background: var(--s1); }
+.ai-strip strong { color: var(--t2); }
+
+/* ── CONTENT ──────────────────────────────────────────────────────── */
+#content { max-width: 1300px; margin: 0 auto; padding: 24px 20px 56px; }
+
+.month-hd {
+  font-size: 0.62rem; text-transform: uppercase; letter-spacing: .1em;
+  color: var(--t3); font-weight: 700; margin: 28px 0 12px;
+  display: flex; align-items: center; gap: 10px;
+}
+.month-hd:first-child { margin-top: 0; }
+.month-hd::after { content:''; flex:1; height:1px; background:var(--b1); }
+
+.week-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(268px, 1fr)); gap: 8px; margin-bottom: 8px; }
+
+/* ── WEEK CARD ────────────────────────────────────────────────────── */
+.wcard { background: var(--s1); border: 1px solid var(--b1); border-radius: 6px; padding: 14px; transition: border-color .2s; }
+.wcard:hover { border-color: var(--b2); }
+.wcard.is-current { border-color: var(--accent-border); }
+.wcard.is-done { opacity: 0.36; }
+
+.wcard-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.wcard-meta { flex: 1; min-width: 0; }
+.wn { font-size: 0.58rem; color: var(--t3); font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 2px; }
+.wt { font-size: 0.76rem; font-weight: 600; color: var(--t1); line-height: 1.3; }
+.wcard-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+.now-badge { padding: 2px 6px; background: var(--accent); color: #080808; border-radius: 2px; font-size: 0.56rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+.wdays { font-size: 0.6rem; color: var(--t3); }
+
+.wpbar { height: 2px; background: var(--b1); border-radius: 1px; margin: 7px 0 9px; overflow: hidden; }
+.wpbar-fill { height: 100%; background: var(--accent); border-radius: 1px; transition: width .3s ease; }
+.wcard.is-done .wpbar-fill { background: var(--b3); }
+
+/* ── TASKS ────────────────────────────────────────────────────────── */
+.tlist { display: flex; flex-direction: column; gap: 1px; }
+.titem { display: flex; align-items: flex-start; gap: 8px; padding: 4px; cursor: pointer; border-radius: 3px; transition: background .1s; user-select: none; margin: 0 -4px; }
+.titem:hover { background: var(--s2); }
+.tbox { width: 12px; height: 12px; border: 1.5px solid var(--b3); border-radius: 2px; flex-shrink: 0; margin-top: 2px; display: flex; align-items: center; justify-content: center; transition: all .12s; font-size: 8px; color: transparent; line-height: 1; }
+.titem.done .tbox { background: var(--accent); border-color: var(--accent); color: #080808; }
+.ttxt { font-size: 0.72rem; color: var(--t2); line-height: 1.45; transition: color .12s; }
+.titem.done .ttxt { color: var(--t3); text-decoration: line-through; text-decoration-color: var(--t3); }
+
+/* ── GATE PANEL ───────────────────────────────────────────────────── */
+.gate { background: var(--s1); border: 1px solid var(--b2); border-radius: 5px; margin-bottom: 6px; overflow: hidden; }
+.gate.cleared { border-color: var(--green-border); }
+.gate.locked  { border-color: var(--red-border); }
+.gate-hd { display: flex; align-items: center; gap: 10px; padding: 9px 14px; cursor: pointer; user-select: none; transition: background .1s; }
+.gate-hd:hover { background: var(--s2); }
+.gate-label { font-size: 0.66rem; font-weight: 800; text-transform: uppercase; letter-spacing: .09em; color: var(--t2); }
+.gate-prog { font-size: 0.63rem; color: var(--t3); margin-right: auto; }
+.gate-badge { padding: 2px 7px; border-radius: 2px; font-size: 0.56rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+.gate.cleared .gate-badge { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+.gate.locked  .gate-badge { background: var(--red-bg);   color: var(--red);   border: 1px solid var(--red-border); }
+.gate-arrow { font-size: 0.58rem; color: var(--t3); transition: transform .2s; flex-shrink: 0; }
+.gate.open .gate-arrow { transform: rotate(180deg); }
+.gate-body { display: none; padding: 4px 14px 12px; border-top: 1px solid var(--b1); }
+.gate.open .gate-body { display: block; }
+
+/* ── SYNC SETTINGS MODAL ──────────────────────────────────────────── */
+.sync-section { margin-top: 4px; }
+.sync-status-row { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: var(--s2); border: 1px solid var(--b1); border-radius: var(--r); font-size: 0.72rem; margin-bottom: 14px; }
+.sync-status-row .sync-dot { width: 7px; height: 7px; }
+.gist-id-row { display: flex; gap: 6px; }
+.gist-id-row .finput { flex: 1; font-size: 0.7rem; }
+.copy-btn { background: var(--s2); border: 1px solid var(--b2); border-radius: var(--r); color: var(--t2); font-family: var(--font); font-size: 0.65rem; padding: 0 10px; cursor: pointer; white-space: nowrap; transition: border-color .15s, color .15s; }
+.copy-btn:hover { border-color: var(--b3); color: var(--t1); }
+
+.host-box { background: var(--s2); border: 1px solid var(--b1); border-radius: var(--r); padding: 12px 14px; margin-top: 4px; }
+.host-box p { font-size: 0.7rem; color: var(--t2); line-height: 1.6; margin-bottom: 8px; }
+.host-box code { background: var(--s1); padding: 2px 6px; border-radius: 3px; font-size: 0.68rem; color: var(--accent); border: 1px solid var(--b2); display: block; margin: 4px 0; white-space: pre-wrap; word-break: break-all; }
+
+/* ── FOOTER ───────────────────────────────────────────────────────── */
+#footer { border-top: 1px solid var(--b1); padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; font-size: 0.63rem; color: var(--t3); }
+.reset-btn { background: none; border: none; color: var(--t3); font-family: var(--font); font-size: 0.63rem; cursor: pointer; text-decoration: underline; padding: 0; }
+.reset-btn:hover { color: var(--red); }
+
+@media (max-width: 580px) {
+  .hstat, .hdiv, .overall-bar { display: none; }
+  .week-grid { grid-template-columns: 1fr; }
+  #content { padding: 16px 14px 48px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── START DATE MODAL ───────────────────────────────────────────────── -->
+<div id="ov-start" class="overlay">
+  <div class="modal">
+    <div class="modal-logo">32<span>wks</span></div>
+    <div class="modal-sub">AI Engineering Roadmap · 8 months · 3 phases.<br>Set your Week 1 start date to begin tracking.</div>
+    <label for="sd-input">Week 1 start date</label>
+    <input type="date" id="sd-input" class="finput">
+    <div class="btn-row" style="margin-top:18px">
+      <button class="btn" onclick="saveStart()">Start tracking →</button>
+    </div>
+    <div class="modal-sep"></div>
+    <div style="font-size:0.68rem;color:var(--t2);margin-bottom:10px">Already tracking on another device?</div>
+    <label for="restore-pat">GitHub token (gist scope)</label>
+    <div class="finput-wrap">
+      <input type="password" id="restore-pat" class="finput" placeholder="ghp_…">
+      <button class="show-toggle" onclick="toggleVis('restore-pat',this)">show</button>
+    </div>
+    <label for="restore-gid" style="margin-top:10px">Gist ID</label>
+    <input type="text" id="restore-gid" class="finput" placeholder="abc123…">
+    <div class="btn-row">
+      <button class="btn-ghost" onclick="restoreFromGist()">Restore from sync</button>
+    </div>
+    <div id="restore-err" style="font-size:0.68rem;color:var(--red);margin-top:8px;display:none"></div>
+  </div>
+</div>
+
+<!-- ── SYNC SETTINGS MODAL ────────────────────────────────────────────── -->
+<div id="ov-sync" class="overlay hidden">
+  <div class="modal">
+    <h3>⚙ Sync &amp; Access</h3>
+
+    <div class="sync-status-row">
+      <div class="sync-dot" id="sm-dot"></div>
+      <span id="sm-status-text" style="color:var(--t2)">—</span>
+    </div>
+
+    <div class="sync-section">
+      <label>GitHub Personal Access Token</label>
+      <div class="finput-wrap">
+        <input type="password" id="sm-pat" class="finput" placeholder="ghp_…">
+        <button class="show-toggle" onclick="toggleVis('sm-pat',this)">show</button>
+      </div>
+      <div class="hint">Classic token · gist scope only · <a href="https://github.com/settings/tokens/new?scopes=gist&description=32wks-tracker" target="_blank">create one ↗</a></div>
+
+      <label style="margin-top:14px">Gist ID <span style="color:var(--t3);font-weight:400">(auto-created)</span></label>
+      <div class="gist-id-row">
+        <input type="text" id="sm-gid" class="finput" placeholder="will appear after connecting" readonly>
+        <button class="copy-btn" onclick="copyGistId()" id="copy-gid-btn">copy</button>
+      </div>
+      <div class="hint">Share this ID (+ your token) to link on another device.</div>
+
+      <div class="btn-row">
+        <button class="btn" onclick="connectSync()" id="sm-connect-btn">Connect</button>
+        <button class="btn-ghost" onclick="manualPull()" id="sm-pull-btn">Pull now</button>
+      </div>
+      <div id="sm-err" style="font-size:0.68rem;color:var(--red);margin-top:8px;display:none"></div>
+    </div>
+
+    <div class="modal-sep"></div>
+
+    <div style="font-size:0.7rem;font-weight:700;color:var(--t2);margin-bottom:10px;text-transform:uppercase;letter-spacing:.07em">Access from any device</div>
+    <div class="host-box">
+      <p>Serve this file locally on your network:</p>
+      <code>cd ~/ME && python3 -m http.server 8080</code>
+      <p style="margin-top:8px">Then open from phone / tablet:</p>
+      <code id="local-url">http://&lt;your-ip&gt;:8080/dashboard.html</code>
+      <p style="margin-top:8px">Or deploy free on <strong style="color:var(--t1)">Netlify Drop</strong> — drag &amp; drop this file at netlify.com/drop</p>
+    </div>
+
+    <div class="modal-sep"></div>
+    <button class="btn-ghost" style="width:100%" onclick="closeSync()">Close</button>
+  </div>
+</div>
+
+<!-- ── APP ────────────────────────────────────────────────────────────── -->
+<div id="app" style="display:none">
+
+  <div id="header">
+    <div class="header-inner">
+      <div class="logo">32<span>wks</span></div>
+      <div class="hstat"><span id="s-done" class="v">0</span>&nbsp;/ 204</div>
+      <div class="hdiv"></div>
+      <div class="overall-bar"><div class="overall-bar-fill" id="s-bar" style="width:0%"></div></div>
+      <div class="hstat"><span id="s-pct" class="v">0%</span></div>
+      <div class="hdiv"></div>
+      <div class="hstat"><span id="s-gates" class="v">0</span>&nbsp;/ 8 gates</div>
+      <div class="hdiv"></div>
+      <div class="hstat"><span id="s-streak" class="streak-num">0</span>&nbsp;day streak</div>
+      <div class="hstretch"></div>
+      <div class="sync-dot idle" id="h-sync-dot" title="Sync status"></div>
+      <div class="sync-label" id="h-sync-label">not synced</div>
+      <div class="hdiv"></div>
+      <div class="phase-pill" id="s-phase">Phase 1</div>
+      <div class="wk-pill">Wk&nbsp;<strong id="s-wk">—</strong>&nbsp;/ 32</div>
+      <button class="icon-btn" onclick="openSync()" title="Sync settings">⚙</button>
+    </div>
+  </div>
+
+  <div id="tabs">
+    <div class="tabs-inner">
+      <button class="tab active" onclick="switchPhase(1)" id="tab-1">Phase 1 · Purist<span class="tab-ct" id="tc-1">0/0</span></button>
+      <button class="tab" onclick="switchPhase(2)" id="tab-2">Phase 2 · Architect<span class="tab-ct" id="tc-2">0/0</span></button>
+      <button class="tab" onclick="switchPhase(3)" id="tab-3">Phase 3 · Lead<span class="tab-ct" id="tc-3">0/0</span></button>
+    </div>
+  </div>
+
+  <div class="ai-strip"><strong>AI RULE ·</strong> <span id="ai-rule">—</span></div>
+
+  <div id="content"></div>
+
+  <div id="footer">
+    <span>Saved to localStorage · <button class="reset-btn" onclick="doReset()">reset</button></span>
+    <span id="f-date"></span>
+  </div>
+</div>
+
+<script>
+// ─── DATA ──────────────────────────────────────────────────────────────────
+const ROADMAP = [
+  {
+    phase: 1, name: "THE PURIST",
+    rule: "No generated logic for math/ML code. LLMs only for concept explanation or compiler debugging.",
+    months: [
+      {
+        id: 1, name: "Month 1 · Mathematical Foundations & Classical ML (dslr)",
+        weeks: [
+          { id:1, days:"Days 1–7",   title:"Linear Algebra Revival & Project Setup", tasks:[
+            "3B1B Linear Algebra Episodes 1–5 watched",
+            "ml-from-scratch repo initialized, dslr/ structure set up",
+            "Data loading + z-score normalization implemented with unit tests",
+            "Sigmoid function implemented and tested",
+            "CS229 Lecture 1 completed"
+          ]},
+          { id:2, days:"Days 8–14",  title:"Matrix Calculus & Gradient Foundations", tasks:[
+            "Cross-entropy cost function implemented",
+            "Gradient descent (vectorized) implemented",
+            "One-vs-all scaffolding started",
+            "CS229 Lectures 2–4 completed",
+            "3B1B Calculus Episodes 1–3 watched"
+          ]},
+          { id:3, days:"Days 15–21", title:"Optimization Theory & SVD Deep Dive", tasks:[
+            "One-vs-all classifier complete",
+            "Convergence criteria with early stopping implemented",
+            "SVD/Eigendecomposition extension started",
+            "CS229 Lectures 5–6 completed",
+            "MML Ch. 4 (Matrix Decompositions) read"
+          ]},
+          { id:4, days:"Days 22–28", title:"Regularization, Model Selection & Month 1 Wrap", tasks:[
+            "L1/L2 regularization added",
+            "k-fold cross-validation from scratch",
+            "README with LaTeX math written (convergence criteria, cost function, SVD)",
+            "CS229 Lectures 7–8 completed",
+            "MML Ch. 5 (Vector Calculus) read"
+          ]}
+        ],
+        gate:[
+          "ml-from-scratch repo with dslr — all code committed",
+          "README has LaTeX: gradient derivation, convergence criteria, cost function math",
+          "SVD/Eigendecomposition extension implemented and documented",
+          "Can compute gradients of multivariate functions by hand on blank paper",
+          "Can explain bias-variance tradeoff, L1 vs L2 regularization without notes",
+          "CS229 Lectures 1–8 completed",
+          "Mathematics for ML Chapters 2–5 completed"
+        ]
+      },
+      {
+        id: 2, name: "Month 2 · Deep Learning Foundations (multilayer-perceptron)",
+        weeks: [
+          { id:5, days:"Days 29–35", title:"Neural Network Architecture from Scratch", tasks:[
+            "3B1B Neural Networks Episodes 1–2 watched",
+            "Karpathy micrograd Episode 1 watched",
+            "MLP forward pass (configurable layers, ReLU/sigmoid/softmax) implemented",
+            "Numerical gradient checking working"
+          ]},
+          { id:6, days:"Days 36–42", title:"Backpropagation & The Chain Rule", tasks:[
+            "Jacobian matrices derived on paper for each layer",
+            "Full backpropagation implemented",
+            "Gradient checking (numerical vs analytical) passing",
+            "Basic SGD implemented",
+            "CS231n Lectures 3–4 completed"
+          ]},
+          { id:7, days:"Days 43–49", title:"Optimizers & Initialization", tasks:[
+            "Adam optimizer from scratch",
+            "SGD with momentum from scratch",
+            "Xavier/Glorot and He initialization implemented",
+            "README documents WHY each init prevents vanishing/exploding gradients",
+            "Xavier init paper (Glorot & Bengio 2010) read"
+          ]},
+          { id:8, days:"Days 50–56", title:"MLP Polish, Evaluation & Month 2 Wrap", tasks:[
+            "Dropout and batch normalization from scratch",
+            "Learning rate scheduling (step decay, cosine annealing)",
+            "Trained on real dataset (MNIST via CSV)",
+            "README with full LaTeX derivations (Jacobians, Adam, initialization)",
+            "CS231n Lectures 5–7 completed"
+          ]}
+        ],
+        gate:[
+          "multilayer-perceptron: forward pass, backprop, Adam, SGD+momentum, Xavier/He init",
+          "Dropout and batch normalization implemented from scratch",
+          "README with LaTeX derivations: Jacobian per layer, Adam update rules, init math",
+          "Can derive chain rule for 3-layer MLP on blank paper",
+          "Can implement Adam from memory",
+          "CS231n Lectures 1–7 completed, CS229 Lectures 9–10 completed",
+          "Goodfellow Ch. 6, 8 completed; Bishop Ch. 5 started"
+        ]
+      }
+    ]
+  },
+  {
+    phase: 2, name: "THE ARCHITECT",
+    rule: "AI permitted for unit tests, CI/CD boilerplate, and documentation only. 100% focus on PyTorch implementation.",
+    months: [
+      {
+        id: 3, name: "Month 3 · Computer Vision & Framework Mastery (leaffliction)",
+        weeks: [
+          { id:9,  days:"Days 57–63",  title:"The PyTorch Shift & CNN Foundations", tasks:[
+            "leaffliction repo initialized with PyTorch project structure",
+            "Basic CNN architecture implemented",
+            "Data augmentation pipeline (crops, flips, color jitter)",
+            "W&B account set up, first project created",
+            "NumPy MLP ported to PyTorch (autograd comparison done)",
+            "ResNet paper read (He et al. 2015)"
+          ]},
+          { id:10, days:"Days 64–70",  title:"Transfer Learning & ResNet Implementation", tasks:[
+            "Transfer learning with pretrained ResNet-50 implemented",
+            "W&B logging set up (loss curves, LR, accuracy)",
+            "ResNet block from scratch in PyTorch (skip connections)",
+            "EfficientNet paper read (Tan & Le 2019)"
+          ]},
+          { id:11, days:"Days 71–77",  title:"Data Augmentation, Evaluation & EfficientNet", tasks:[
+            "EfficientNet fine-tuning implemented",
+            "Confusion matrix analysis complete",
+            "Evaluation framework: precision, recall, F1 per class",
+            "fast.ai Lesson 1 watched"
+          ]},
+          { id:12, days:"Days 78–84",  title:"Leaffliction Polish & Month 3 Wrap", tasks:[
+            "All experiments tracked in W&B with full logs",
+            "Model comparison documented (ResNet vs EfficientNet)",
+            "README with architecture diagrams and W&B screenshots",
+            "CS231n Lectures 8–15 completed"
+          ]}
+        ],
+        gate:[
+          "leaffliction: PyTorch CNN, data augmentation, transfer learning complete",
+          "W&B dashboard with all experiment logs, loss curves, accuracy comparisons",
+          "Confusion matrix analysis documented in README",
+          "ResNet and EfficientNet papers read and understood",
+          "CS231n Lectures 8–15 completed (full course done)",
+          "Goodfellow Ch. 9 completed",
+          "Can explain skip connections, compound scaling, and transfer learning in an interview"
+        ]
+      },
+      {
+        id: 4, name: "Month 4 · NLP, Transformers & Advanced LLM Engineering",
+        weeks: [
+          { id:13, days:"Days 85–91",  title:"NLP Foundations & RAG Theory Backfill", tasks:[
+            "RAG paper (Lewis et al. 2020) read",
+            "RAGAS evaluation framework set up",
+            "NLP tokenization, embeddings, attention foundations reviewed",
+            "CS224N Lectures 1–2 completed",
+            "Karpathy \"Let's build GPT\" watched (attention segment)"
+          ]},
+          { id:14, days:"Days 92–98",  title:"Attention Mechanism & Transformer Architecture", tasks:[
+            "Self-attention derived on paper (Q, K, V matrices)",
+            "Scaled dot-product attention implemented from scratch",
+            "BERT paper read (Devlin et al. 2018)",
+            "\"Attention Is All You Need\" paper read (first pass)",
+            "CS224N Lectures 3–5 completed"
+          ]},
+          { id:15, days:"Days 99–105", title:"Multi-Head Attention & Encoder-Decoder", tasks:[
+            "Multi-head attention implemented from scratch in PyTorch",
+            "Positional encoding implemented",
+            "Encoder-decoder architecture scaffolded",
+            "GPT-2 paper read",
+            "CS224N Lectures 6–8 completed"
+          ]},
+          { id:16, days:"Days 106–112",title:"Transformer Complete & RAGAS Report", tasks:[
+            "Full transformer (encoder-decoder) implemented and trained",
+            "RAGAS technical report on UM6P RAG system written",
+            "GPT-3 paper read",
+            "total-perspective-vortex project completed",
+            "CS324 Lectures 1–4 completed"
+          ]}
+        ],
+        gate:[
+          "Transformer-from-scratch: MHA, positional encoding, encoder-decoder — all committed",
+          "RAGAS technical report on UM6P RAG system (MRR, NDCG, hallucination rate)",
+          "total-perspective-vortex project completed",
+          "\"Attention Is All You Need\" fully read and understood",
+          "BERT, GPT-2, GPT-3 papers read",
+          "CS224N Lectures 1–8 completed, CS324 Lectures 1–4 completed",
+          "Can implement multi-head attention from memory on a whiteboard"
+        ]
+      },
+      {
+        id: 5, name: "Month 5 · The CUDA Month",
+        weeks: [
+          { id:17, days:"Days 113–119",title:"CUDA Fundamentals & Kernel Basics", tasks:[
+            "GPU Mode Episode 1 watched",
+            "CS149 \"Why Parallelism\" lecture watched",
+            "NVCC installed and working",
+            "First CUDA kernel written (vector addition)",
+            "Thread/block/grid hierarchy understood; drew it on paper",
+            "Kirk & Hwu Ch. 1–3 read"
+          ]},
+          { id:18, days:"Days 120–126",title:"Memory Hierarchy & Tiled Matrix Multiplication", tasks:[
+            "Tiled matrix multiplication kernel implemented",
+            "Shared memory usage benchmarked vs global memory",
+            "FlashAttention paper read (Dao et al. 2022)",
+            "Kirk & Hwu Ch. 4–6 read"
+          ]},
+          { id:19, days:"Days 127–133",title:"CUDA Activation Kernels & Optimization", tasks:[
+            "CUDA ReLU kernel implemented",
+            "CUDA softmax kernel with numerical stability implemented",
+            "Warp divergence profiled and explained",
+            "Kirk & Hwu Ch. 7–8 read"
+          ]},
+          { id:20, days:"Days 134–140",title:"Blog Post, Triton Intro & Month 5 Wrap", tasks:[
+            "CUDA kernels integrated into ml-from-scratch (tiled matmul, ReLU, softmax)",
+            "10x+ CPU speedup benchmarked and documented",
+            "Technical blog post written: CPU vs GPU, shared memory tiling",
+            "Triton introduction completed",
+            "CS149 Lectures 1–8 completed, CS336 Lectures 1–6 completed"
+          ]}
+        ],
+        gate:[
+          "CUDA kernels in ml-from-scratch: tiled matmul, ReLU, softmax",
+          "10x+ speedup over naive CPU (benchmarked and documented)",
+          "Technical blog post: CPU vs GPU performance, shared memory tiling",
+          "FlashAttention paper read and understood",
+          "Triton introduction completed",
+          "CS149 Lectures 1–8 completed, CS336 Lectures 1–6 completed",
+          "Kirk & Hwu Chapters 1–8 completed",
+          "Can explain GPU memory hierarchy, warp divergence, and tiling on a whiteboard"
+        ]
+      }
+    ]
+  },
+  {
+    phase: 3, name: "THE LEAD",
+    rule: "AI for system design reviews, optimization profiling, and mock interview simulation.",
+    months: [
+      {
+        id: 6, name: "Month 6 · Open-Source Strategy & System Design",
+        weeks: [
+          { id:21, days:"Days 141–147",title:"Open-Source Contribution & System Design Start", tasks:[
+            "First PR submitted to LlamaIndex or LangChain",
+            "CS329S Lectures 1–2 completed",
+            "LinkedIn updated: ongoing ML engineering studies",
+            "3 alumni from 1337/UM6P messaged on LinkedIn"
+          ]},
+          { id:22, days:"Days 148–154",title:"ML System Design Deep Dive & First Applications", tasks:[
+            "First LlamaIndex PR submitted (second targeted)",
+            "Designed real-time RAG pipeline on whiteboard",
+            "First 10–15 job applications submitted (Mistral, HuggingFace, LightOn)",
+            "CS329S Lectures 3–4 completed"
+          ]},
+          { id:23, days:"Days 155–161",title:"Production ML Patterns & Monitoring", tasks:[
+            "Flagship-system architecture choice made (Multi-Modal RAG or Arabic LLM)",
+            "CS329S Lectures 5–6 completed",
+            "Designing ML Systems (Chip Huyen) — halfway read"
+          ]},
+          { id:24, days:"Days 162–168",title:"System Design Mastery & Month 6 Wrap", tasks:[
+            "Flagship-system architecture document complete",
+            "Docker skeleton set up for flagship-system",
+            "CI/CD pipeline configured",
+            "At least 1 open-source PR merged or addressing review feedback",
+            "CS329S Lectures 7–8 completed"
+          ]}
+        ],
+        gate:[
+          "At least 1 merged PR in LlamaIndex or LangChain",
+          "Designing ML Systems (Chip Huyen) fully read",
+          "Can design a recommendation system or real-time RAG pipeline on a whiteboard",
+          "40–60 job applications submitted",
+          "CS329S Lectures 1–8 completed, CS229M Lectures 1–4 completed",
+          "Flagship-system architecture document and Docker skeleton ready",
+          "LinkedIn network expanded with 10+ AI industry connections"
+        ]
+      },
+      {
+        id: 7, name: "Month 7 · Flagship Project & World Models",
+        weeks: [
+          { id:25, days:"Days 169–175",title:"Flagship System Build Sprint", tasks:[
+            "flagship-system: document ingestion + retrieval/generation pipeline started",
+            "W&B and LangWatch monitoring integrated",
+            "DreamerV3 paper read (Sections 1–3)",
+            "CS234 Lectures 1–2 completed"
+          ]},
+          { id:26, days:"Days 176–182",title:"World Models & VAE Implementation", tasks:[
+            "VAE implemented to learn latent representations of CartPole frames",
+            "Q-learning on FrozenLake implemented",
+            "I-JEPA paper read",
+            "CS234 Lectures 3–4 completed"
+          ]},
+          { id:27, days:"Days 183–189",title:"Flagship Evaluation & JEPA Deep Dive", tasks:[
+            "RAGAS evaluation running on flagship-system",
+            "Faithfulness, answer relevancy, context recall, hallucination rate measured",
+            "DQN on CartPole implemented (experience replay + target network)",
+            "V-JEPA paper read",
+            "CS234 Lectures 5–6 completed"
+          ]},
+          { id:28, days:"Days 190–196",title:"Flagship Polish & Month 7 Wrap", tasks:[
+            "flagship-system: comprehensive README, Docker Compose, CI/CD (GitHub Actions)",
+            "Evaluation metrics dashboard live",
+            "REINFORCE on CartPole implemented",
+            "3-minute demo video recorded and published on LinkedIn",
+            "CS234 Lectures 7–8 completed"
+          ]}
+        ],
+        gate:[
+          "flagship-system: Docker, CI/CD, RAGAS eval, monitoring, demo-ready",
+          "VAE mini-World Model with CartPole latent space visualization",
+          "DreamerV3, I-JEPA, V-JEPA papers read",
+          "DQN and REINFORCE implemented from scratch",
+          "CS234 Lectures 1–8, CS236 Lectures 1–6, CS333 Lectures 1–3 completed",
+          "Sutton & Barto Chapters 1–8 completed",
+          "70–90+ total job applications submitted"
+        ]
+      },
+      {
+        id: 8, name: "Month 8 · Full-Scale Job Application & Interview Sprint",
+        weeks: [
+          { id:29, days:"Days 197–203",title:"Interview Sprint Launch", tasks:[
+            "LeetCode: 2 Mediums/day habit started",
+            "Can derive 4-layer MLP backward pass on paper from memory",
+            "Can draw transformer architecture from memory",
+            "ML Interviews Book Ch. 1–3 read"
+          ]},
+          { id:30, days:"Days 204–210",title:"System Design Mocks", tasks:[
+            "2 mock system design interviews completed (Pramp/interviewing.io)",
+            "Mini transformer inference loop implemented from memory (< 30 min)",
+            "ML Interviews Book Ch. 4–6 read"
+          ]},
+          { id:31, days:"Days 211–217",title:"Full Mock Interview Simulation", tasks:[
+            "Full interview loop simulated: ML theory + coding + system design + behavioral",
+            "STAR method responses practiced for UM6P RAG system, MCP agents",
+            "Arabic LLM evaluation expertise narrative polished",
+            "Passeport Talent visa narrative prepared for French companies"
+          ]},
+          { id:32, days:"Days 218–224",title:"Final Sprint & Portfolio Perfection", tasks:[
+            "All 3 repos READMEs polished with LaTeX, W&B screenshots, architecture diagrams",
+            "Docker containers verified: build and run cleanly",
+            "Final application blitz: 15–20 targeted applications",
+            "Personalized cover letters for Mistral, HuggingFace, Anthropic, DeepMind, Cohere",
+            "60+ LeetCode Mediums solved total"
+          ]}
+        ],
+        gate:[
+          "100–120+ total job applications submitted",
+          "All 3 GitHub repos polished and demo-ready",
+          "Can pass ML theory, coding, and system design interviews with confidence",
+          "Company-specific materials for Mistral, HuggingFace, Anthropic, DeepMind, Cohere",
+          "Passeport Talent visa pathway documented",
+          "Arabic LLM evaluation expertise positioned as strategic differentiator",
+          "CS333, ML Interviews Book, ML System Design Interview book completed",
+          "60+ LeetCode Mediums solved"
+        ]
+      }
+    ]
+  }
+];
+
+// ─── STATE ─────────────────────────────────────────────────────────────────
+const SK = 'roadmap_v1';
+let S = {
+  startDate: null,
+  tasks: {},
+  streak: { lastDate: null, count: 0 },
+  activePhase: 1,
+  sync: { pat: null, gistId: null, lastSynced: null }
+};
+
+function load() {
+  try {
+    const r = localStorage.getItem(SK);
+    if (r) {
+      const p = JSON.parse(r);
+      S = Object.assign({}, S, p);
+      S.tasks  = p.tasks  || {};
+      S.streak = p.streak || { lastDate: null, count: 0 };
+      S.sync   = p.sync   || { pat: null, gistId: null, lastSynced: null };
+    }
+  } catch(e) {}
+}
+function persist() { localStorage.setItem(SK, JSON.stringify(S)); }
+function doReset() {
+  if (!confirm('Reset all progress? Cannot be undone.')) return;
+  localStorage.removeItem(SK); location.reload();
+}
+
+// ─── HELPERS ───────────────────────────────────────────────────────────────
+const tid  = (wid, ti) => `w${wid}-t${ti+1}`;
+const gid  = (mid, gi) => `m${mid}-g${gi+1}`;
+const esc  = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+function getCW() {
+  if (!S.startDate) return 1;
+  const d = Math.floor((Date.now() - new Date(S.startDate)) / 86400000);
+  return Math.max(1, Math.min(32, Math.floor(d/7)+1));
+}
+const phaseOf = w => w<=8?1:w<=20?2:3;
+
+function toggleVis(id, btn) {
+  const el = document.getElementById(id);
+  const hidden = el.type === 'password';
+  el.type = hidden ? 'text' : 'password';
+  btn.textContent = hidden ? 'hide' : 'show';
+}
+
+// ─── STATS ─────────────────────────────────────────────────────────────────
+function calcStats() {
+  let tt=0,td=0,gt=0,gd=0;
+  ROADMAP.forEach(p=>p.months.forEach(m=>{
+    m.weeks.forEach(w=>w.tasks.forEach((_,i)=>{tt++;if(S.tasks[tid(w.id,i)])td++;}));
+    m.gate.forEach((_,i)=>{gt++;if(S.tasks[gid(m.id,i)])gd++;});
+  }));
+  return {tt,td,gt,gd};
+}
+function phaseStats(pn) {
+  let t=0,d=0;
+  ROADMAP.find(x=>x.phase===pn).months.forEach(m=>{
+    m.weeks.forEach(w=>w.tasks.forEach((_,i)=>{t++;if(S.tasks[tid(w.id,i)])d++;}));
+    m.gate.forEach((_,i)=>{t++;if(S.tasks[gid(m.id,i)])d++;});
+  });
+  return {t,d};
+}
+
+// ─── STREAK ────────────────────────────────────────────────────────────────
+function bumpStreak() {
+  const today = new Date().toISOString().slice(0,10);
+  if (S.streak.lastDate === today) return;
+  const diff = S.streak.lastDate
+    ? Math.floor((new Date(today)-new Date(S.streak.lastDate))/86400000) : 0;
+  S.streak = { lastDate: today, count: diff===1 ? S.streak.count+1 : 1 };
+}
+
+// ─── TOGGLE ────────────────────────────────────────────────────────────────
+let _pushTimer = null;
+function toggle(id) {
+  const was = S.tasks[id];
+  S.tasks[id] = !was;
+  if (!was) bumpStreak();
+  persist(); render();
+  // debounced push (1.2s)
+  clearTimeout(_pushTimer);
+  _pushTimer = setTimeout(() => pushToGist(), 1200);
+}
+
+// ─── SYNC — GITHUB GIST ────────────────────────────────────────────────────
+const GIST_FILE = 'roadmap-progress.json';
+const GIST_API  = 'https://api.github.com/gists';
+
+function setSyncState(status, label) {
+  ['h-sync-dot','sm-dot'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){el.className='sync-dot '+status;}
+  });
+  const sl=document.getElementById('h-sync-label');
+  if(sl) sl.textContent=label;
+}
+
+function gistPayload() {
+  return {
+    startDate: S.startDate,
+    tasks: S.tasks,
+    streak: S.streak
+  };
+}
+
+async function pushToGist() {
+  if (!S.sync.pat || !S.sync.gistId) return;
+  setSyncState('syncing','syncing…');
+  try {
+    const r = await fetch(`${GIST_API}/${S.sync.gistId}`, {
+      method: 'PATCH',
+      headers: { 'Authorization': `token ${S.sync.pat}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ files: { [GIST_FILE]: { content: JSON.stringify(gistPayload(), null, 2) } } })
+    });
+    if (!r.ok) throw new Error(`${r.status}`);
+    S.sync.lastSynced = new Date().toISOString();
+    persist();
+    setSyncState('synced', 'synced ' + fmtAgo(S.sync.lastSynced));
+  } catch(e) {
+    setSyncState('error', 'sync error');
+  }
+}
+
+async function pullFromGist(pat, gistId) {
+  const _pat = pat || S.sync.pat;
+  const _gid = gistId || S.sync.gistId;
+  if (!_pat || !_gid) return false;
+  setSyncState('syncing','pulling…');
+  try {
+    const r = await fetch(`${GIST_API}/${_gid}`, {
+      headers: { 'Authorization': `token ${_pat}` }
+    });
+    if (!r.ok) throw new Error(`${r.status}`);
+    const data = await r.json();
+    const raw = data.files[GIST_FILE]?.content;
+    if (!raw) throw new Error('file not found in gist');
+    const remote = JSON.parse(raw);
+    if (remote.tasks) S.tasks = remote.tasks;
+    if (remote.startDate) S.startDate = remote.startDate;
+    if (remote.streak) S.streak = remote.streak;
+    S.sync = { ...(S.sync||{}), pat: _pat, gistId: _gid, lastSynced: new Date().toISOString() };
+    persist(); render();
+    setSyncState('synced', 'synced ' + fmtAgo(S.sync.lastSynced));
+    return true;
+  } catch(e) {
+    setSyncState('error', 'pull failed');
+    return false;
+  }
+}
+
+async function createGist(pat) {
+  const r = await fetch(GIST_API, {
+    method: 'POST',
+    headers: { 'Authorization': `token ${pat}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      description: '32 Weeks — AI Engineering Roadmap',
+      public: false,
+      files: { [GIST_FILE]: { content: JSON.stringify(gistPayload(), null, 2) } }
+    })
+  });
+  if (!r.ok) throw new Error(`${r.status}`);
+  const d = await r.json();
+  return d.id;
+}
+
+function fmtAgo(iso) {
+  if (!iso) return '';
+  const s = Math.floor((Date.now() - new Date(iso)) / 1000);
+  if (s < 60) return 'just now';
+  if (s < 3600) return Math.floor(s/60) + 'm ago';
+  if (s < 86400) return Math.floor(s/3600) + 'h ago';
+  return Math.floor(s/86400) + 'd ago';
+}
+
+// ─── SYNC MODAL ────────────────────────────────────────────────────────────
+function openSync() {
+  const el = document.getElementById('ov-sync');
+  el.classList.remove('hidden');
+  // populate fields
+  document.getElementById('sm-pat').value = S.sync.pat || '';
+  document.getElementById('sm-gid').value = S.sync.gistId || '';
+  // status
+  const dotEl = document.getElementById('sm-dot');
+  const stEl  = document.getElementById('sm-status-text');
+  if (!S.sync.pat) {
+    dotEl.className='sync-dot idle'; stEl.textContent='Not configured';
+  } else if (S.sync.lastSynced) {
+    dotEl.className='sync-dot synced'; stEl.textContent='Last synced: '+fmtAgo(S.sync.lastSynced);
+  } else {
+    dotEl.className='sync-dot idle'; stEl.textContent='Token set, not yet synced';
+  }
+}
+function closeSync() { document.getElementById('ov-sync').classList.add('hidden'); }
+
+async function connectSync() {
+  const pat = document.getElementById('sm-pat').value.trim();
+  const gidVal = document.getElementById('sm-gid').value.trim();
+  const errEl = document.getElementById('sm-err');
+  const btn = document.getElementById('sm-connect-btn');
+  errEl.style.display='none';
+  if (!pat) { errEl.textContent='Enter a GitHub token.'; errEl.style.display='block'; return; }
+  btn.disabled=true; btn.textContent='Connecting…';
+  try {
+    let resolvedGid = gidVal;
+    if (!resolvedGid) {
+      // create new gist
+      resolvedGid = await createGist(pat);
+    }
+    S.sync = { pat, gistId: resolvedGid, lastSynced: null };
+    persist();
+    document.getElementById('sm-gid').value = resolvedGid;
+    // push current state
+    await pushToGist();
+    document.getElementById('sm-status-text').textContent = 'Connected · synced just now';
+    document.getElementById('sm-dot').className='sync-dot synced';
+  } catch(e) {
+    errEl.textContent = 'Error: ' + e.message + '. Check your token and try again.';
+    errEl.style.display='block';
+    setSyncState('error','error');
+  }
+  btn.disabled=false; btn.textContent='Connect';
+}
+
+async function manualPull() {
+  const pat = document.getElementById('sm-pat').value.trim();
+  const gidVal = document.getElementById('sm-gid').value.trim();
+  const errEl = document.getElementById('sm-err');
+  errEl.style.display='none';
+  const btn = document.getElementById('sm-pull-btn');
+  btn.disabled=true; btn.textContent='Pulling…';
+  const ok = await pullFromGist(pat||null, gidVal||null);
+  if (!ok) {
+    errEl.textContent='Pull failed. Check token and Gist ID.';
+    errEl.style.display='block';
+  } else {
+    document.getElementById('sm-pat').value = S.sync.pat||'';
+    document.getElementById('sm-gid').value = S.sync.gistId||'';
+    document.getElementById('sm-status-text').textContent='Pulled · '+fmtAgo(S.sync.lastSynced);
+    document.getElementById('sm-dot').className='sync-dot synced';
+  }
+  btn.disabled=false; btn.textContent='Pull now';
+}
+
+function copyGistId() {
+  const gidVal = document.getElementById('sm-gid').value;
+  if (!gidVal) return;
+  navigator.clipboard?.writeText(gidVal);
+  const btn = document.getElementById('copy-gid-btn');
+  btn.textContent='copied!'; setTimeout(()=>btn.textContent='copy', 1500);
+}
+
+// ─── RESTORE FROM GIST (start modal) ──────────────────────────────────────
+async function restoreFromGist() {
+  const pat = document.getElementById('restore-pat').value.trim();
+  const gidVal = document.getElementById('restore-gid').value.trim();
+  const errEl = document.getElementById('restore-err');
+  errEl.style.display='none';
+  if (!pat||!gidVal) { errEl.textContent='Enter both token and Gist ID.'; errEl.style.display='block'; return; }
+  const ok = await pullFromGist(pat, gidVal);
+  if (ok) {
+    document.getElementById('ov-start').classList.add('hidden');
+    document.getElementById('app').style.display='block';
+    if (!S.activePhase) S.activePhase = phaseOf(getCW());
+    render();
+  } else {
+    errEl.textContent='Could not pull from gist. Check token and ID.';
+    errEl.style.display='block';
+  }
+}
+
+// ─── PHASE SWITCH ──────────────────────────────────────────────────────────
+function switchPhase(p) {
+  S.activePhase = p; window._ds = false; render();
+}
+
+// ─── START DATE ────────────────────────────────────────────────────────────
+function saveStart() {
+  const v = document.getElementById('sd-input').value;
+  if (!v) return;
+  S.startDate = v; persist();
+  document.getElementById('ov-start').classList.add('hidden');
+  document.getElementById('app').style.display='block';
+  S.activePhase = phaseOf(getCW());
+  render();
+  // push to gist if configured
+  if (S.sync.pat && S.sync.gistId) pushToGist();
+}
+
+// ─── RENDER ────────────────────────────────────────────────────────────────
+function render() {
+  const cw  = getCW();
+  const st  = calcStats();
+  const pct = Math.round(st.td*100/st.tt);
+  const cp  = phaseOf(cw);
+
+  document.getElementById('s-done').textContent  = st.td;
+  document.getElementById('s-pct').textContent   = pct+'%';
+  document.getElementById('s-bar').style.width   = pct+'%';
+  document.getElementById('s-gates').textContent = st.gd;
+  document.getElementById('s-streak').textContent= S.streak.count||0;
+  document.getElementById('s-wk').textContent    = cw;
+  document.getElementById('s-phase').textContent =
+    `P${cp} · ${ROADMAP.find(p=>p.phase===cp).name}`;
+
+  // sync dot in header
+  if (!S.sync.pat) {
+    setSyncState('idle','not synced');
+  } else if (S.sync.lastSynced) {
+    setSyncState('synced', fmtAgo(S.sync.lastSynced));
+  } else {
+    setSyncState('idle','not yet synced');
+  }
+
+  [1,2,3].forEach(p=>{
+    document.getElementById(`tab-${p}`).classList.toggle('active',p===S.activePhase);
+    const ps=phaseStats(p);
+    document.getElementById(`tc-${p}`).textContent=`${ps.d}/${ps.t}`;
+  });
+  document.getElementById('ai-rule').textContent =
+    ROADMAP.find(p=>p.phase===S.activePhase).rule;
+
+  // content
+  const phase = ROADMAP.find(p=>p.phase===S.activePhase);
+  let html='';
+  phase.months.forEach(m=>{
+    html+=`<div class="month-hd">${esc(m.name)}</div><div class="week-grid">`;
+    m.weeks.forEach(w=>{
+      const isCW=w.id===cw;
+      const wd=w.tasks.filter((_,i)=>S.tasks[tid(w.id,i)]).length;
+      const wPct=Math.round(wd*100/w.tasks.length);
+      const isDone=wd===w.tasks.length;
+      let cls='wcard'+(isCW?' is-current':'')+(isDone?' is-done':'');
+      html+=`<div class="${cls}" id="wc-${w.id}">
+        <div class="wcard-top">
+          <div class="wcard-meta"><div class="wn">WK ${w.id}</div><div class="wt">${esc(w.title)}</div></div>
+          <div class="wcard-right">${isCW?'<span class="now-badge">NOW</span>':''}<span class="wdays">${esc(w.days)}</span></div>
+        </div>
+        <div class="wpbar"><div class="wpbar-fill" style="width:${wPct}%"></div></div>
+        <div class="tlist">`;
+      w.tasks.forEach((task,ti)=>{
+        const id=tid(w.id,ti), done=!!S.tasks[id];
+        html+=`<div class="titem${done?' done':''}" onclick="toggle('${id}')">
+          <div class="tbox">${done?'✓':''}</div>
+          <span class="ttxt">${esc(task)}</span></div>`;
+      });
+      html+=`</div></div>`;
+    });
+    html+=`</div>`;
+    // gate
+    const gDone=m.gate.filter((_,i)=>S.tasks[gid(m.id,i)]).length;
+    const cleared=gDone===m.gate.length;
+    html+=`<div class="gate ${cleared?'cleared':'locked'}" id="gate-${m.id}">
+      <div class="gate-hd" onclick="document.getElementById('gate-${m.id}').classList.toggle('open')">
+        <span class="gate-label">M${m.id} Gate</span>
+        <span class="gate-prog">${gDone} / ${m.gate.length}</span>
+        <span class="gate-badge">${cleared?'CLEARED':'LOCKED'}</span>
+        <span class="gate-arrow">▼</span>
+      </div>
+      <div class="gate-body"><div class="tlist" style="padding-top:6px">`;
+    m.gate.forEach((item,gi)=>{
+      const id=gid(m.id,gi), done=!!S.tasks[id];
+      html+=`<div class="titem${done?' done':''}" onclick="toggle('${id}')">
+        <div class="tbox">${done?'✓':''}</div>
+        <span class="ttxt">${esc(item)}</span></div>`;
+    });
+    html+=`</div></div></div>`;
+  });
+
+  document.getElementById('content').innerHTML=html;
+  document.getElementById('f-date').textContent=S.startDate?`Started ${S.startDate}`:'';
+
+  if (!window._ds) {
+    const el=document.getElementById(`wc-${cw}`);
+    if(el){window._ds=true;setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'start'}),80);}
+  }
+}
+
+// ─── INIT ──────────────────────────────────────────────────────────────────
+load();
+
+if (!S.startDate) {
+  document.getElementById('sd-input').value = new Date().toISOString().slice(0,10);
+  document.getElementById('ov-start').classList.remove('hidden');
+} else {
+  document.getElementById('ov-start').classList.add('hidden');
+  document.getElementById('app').style.display='block';
+  if (!S.activePhase) S.activePhase = phaseOf(getCW());
+  render();
+  // pull latest state from gist on load
+  if (S.sync.pat && S.sync.gistId) pullFromGist();
+}
+</script>
+</body>
+</html>
